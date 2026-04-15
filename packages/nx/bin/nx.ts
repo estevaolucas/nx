@@ -8,34 +8,33 @@ if (process.env.FORCE_COLOR === '0') {
   delete process.env.FORCE_COLOR;
 }
 
+import { execSync } from 'child_process';
+import { existsSync } from 'fs';
+import { createRequire } from 'module';
+import { extname, join } from 'path';
+import { performance } from 'perf_hooks';
+import * as pc from 'picocolors';
+import { major } from 'semver';
+import { flushAnalytics, startAnalytics } from '../src/analytics';
+import { daemonClient } from '../src/daemon/client/client';
+import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
+import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
+import { workspaceDataDirectoryForWorkspace } from '../src/utils/cache-directory';
+import { removeDbConnections } from '../src/utils/db-connection';
+import { loadRootEnvFiles } from '../src/utils/dotenv';
 import {
   findWorkspaceRoot,
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
-import * as pc from 'picocolors';
-import { loadRootEnvFiles } from '../src/utils/dotenv';
-import { initLocal } from './init-local';
-import { output } from '../src/utils/output';
 import {
   getNxInstallationPath,
   getNxRequirePaths,
 } from '../src/utils/installation-directory';
-import { major } from 'semver';
-import { stripIndents } from '../src/utils/strip-indents';
-import { execSync } from 'child_process';
-import { createRequire } from 'module';
-import { extname, join } from 'path';
-import { existsSync } from 'fs';
-import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
-import { performance } from 'perf_hooks';
-import { setupWorkspaceContext } from '../src/utils/workspace-context';
-import { daemonClient } from '../src/daemon/client/client';
-import { removeDbConnections } from '../src/utils/db-connection';
-import { workspaceDataDirectoryForWorkspace } from '../src/utils/cache-directory';
-import { surfaceFatalErrorReports } from '../src/utils/report-on-fatal-error';
-import { ensureAnalyticsPreferenceSet } from '../src/utils/analytics-prompt';
-import { flushAnalytics, startAnalytics } from '../src/analytics';
+import { output } from '../src/utils/output';
 import '../src/utils/perf-logging';
+import { stripIndents } from '../src/utils/strip-indents';
+import { setupWorkspaceContext } from '../src/utils/workspace-context';
+import { initLocal } from './init-local';
 
 const isTsExt = extname(__filename).endsWith('.ts');
 const pathToPkgJson = isTsExt ? '../package.json' : '../../package.json';
@@ -56,7 +55,6 @@ async function main() {
     const workspaceDataDir = workspaceDataDirectoryForWorkspace(workspace.dir);
     process.report.reportOnFatalError = true;
     process.report.directory = workspaceDataDir;
-    surfaceFatalErrorReports(workspaceDataDir);
 
     performance.mark('loading dotenv files:start');
     loadRootEnvFiles(workspace.dir);
